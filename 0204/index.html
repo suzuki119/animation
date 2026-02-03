@@ -1,0 +1,106 @@
+<!-- これはローディングメーターのアニメーションです -->
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #ffffff;
+    }
+
+    .meter {
+        position: relative;
+        width: 300px;
+        height: 30px;
+        border-radius: 30px;
+        border: #000000 solid 2px;
+        overflow: hidden;
+    }
+
+    .meter::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 100%;
+        background: #000000;
+        border-radius: 2px;
+        animation: fill 2s ease-in-out infinite;
+    }
+
+    .loading-text {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        color: #000000;
+        font-weight: 400;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+
+    .dots::after {
+        content: '';
+        animation: dots 1.5s steps(4) infinite;
+    }
+
+    @keyframes fill {
+        0% {
+            width: 0%;
+        }
+
+        50% {
+            width: 100%;
+        }
+
+        100% {
+            width: 100%;
+        }
+    }
+
+    @keyframes dots {
+
+        0%,
+        20% {
+            content: '';
+        }
+
+        40% {
+            content: '.';
+        }
+
+        60% {
+            content: '..';
+        }
+
+        80%,
+        100% {
+            content: '...';
+        }
+    }
+</style>
+
+<body>
+    <div class="meter">
+        <div class="loading-text">
+            Loading<span class="dots"></span>
+        </div>
+    </div>
+</body>
+
+<script>
+    // Optional: Update loading text when complete
+    const meter = document.querySelector('.meter');
+    const loadingText = document.querySelector('.loading-text');
+
+    setTimeout(() => {
+        // Uncomment to change text after loading:
+        // loadingText.innerHTML = 'Complete';
+    }, 2000);
+</script>
