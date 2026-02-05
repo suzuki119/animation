@@ -1,0 +1,123 @@
+<!-- これは右回り矢印のロードアニメーションです -->
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .loader-container {
+        text-align: center;
+    }
+
+    .loader {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 30px;
+    }
+
+
+    /* 追加の装飾的な円 */
+    .circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 10px solid rgba(0, 0, 0, 0.2);
+        border-radius: 50%;
+        border-top-color: rgba(0, 0, 0, 0.8);
+        animation: rotate 2s linear infinite;
+    }
+
+    @keyframes rotate {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .loading-text {
+        color: white;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 0.6;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    /* ドットアニメーション */
+    .dots {
+        display: inline-block;
+        width: 30px;
+        text-align: left;
+    }
+
+    .dots::after {
+        content: '';
+        animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+
+        0%,
+        20% {
+            content: '';
+        }
+
+        40% {
+            content: '.';
+        }
+
+        60% {
+            content: '..';
+        }
+
+        80%,
+        100% {
+            content: '...';
+        }
+    }
+</style>
+
+<body>
+    <div class="loader-container">
+        <div class="loader">
+            <div class="circle"></div>
+        </div>
+    </div>
+</body>
+
+<script>
+    // アニメーションの速度を動的に変更する例
+    const arrow = document.querySelector('.arrow');
+    const circle = document.querySelector('.circle');
+
+    // オプション: クリックで速度変更
+    document.addEventListener('click', () => {
+        const currentSpeed = parseFloat(
+            getComputedStyle(arrow).animationDuration
+        );
+        const newSpeed = currentSpeed === 1.5 ? 0.8 : 1.5;
+
+        arrow.style.animationDuration = `${newSpeed}s`;
+        circle.style.animationDuration = `${newSpeed * 1.33}s`;
+    });
+</script>
