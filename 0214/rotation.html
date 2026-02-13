@@ -1,0 +1,98 @@
+<!-- 四角形が回転しながら丸へと変形するアニメーション -->
+<style>
+    :root {
+        --bg: radial-gradient(circle at 20% 20%, #1f2937, #0b1020 60%);
+        --square: #3fe0c5;
+        --outline: rgba(255, 255, 255, 0.16);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        color: #000;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+        letter-spacing: 0.02em;
+    }
+
+    .frame {
+        position: relative;
+        width: 320px;
+        height: 320px;
+        display: grid;
+        place-items: center;
+        isolation: isolate;
+    }
+
+    .shape {
+        width: 160px;
+        aspect-ratio: 1;
+        background: #000;
+        border-radius: 16px;
+        position: relative;
+        animation: spinMorph 4s ease-in-out infinite;
+    }
+
+
+    .caption {
+        position: absolute;
+        bottom: -48px;
+        text-transform: uppercase;
+        font-size: 12px;
+        opacity: 0.75;
+        letter-spacing: 0.18em;
+    }
+
+    @keyframes spinMorph {
+        0% {
+            transform: rotate(0deg) scale(1);
+            border-radius: 12px;
+        }
+
+        25% {
+            transform: rotate(90deg) scale(1.05);
+            border-radius: 30%;
+        }
+
+        50% {
+            transform: rotate(180deg) scale(1.08);
+            border-radius: 50%;
+        }
+
+        75% {
+            transform: rotate(270deg) scale(1.05);
+            border-radius: 30%;
+        }
+
+        100% {
+            transform: rotate(360deg) scale(1);
+            border-radius: 12px;
+        }
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.6;
+        }
+
+        50% {
+            transform: scale(1.05);
+            opacity: 0.25;
+        }
+    }
+</style>
+
+<body>
+    <div class="frame">
+        <div class="shape"></div>
+        <div class="caption">square to circle</div>
+    </div>
+</body>
