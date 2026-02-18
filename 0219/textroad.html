@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Road Animation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #fff;
+            color: #111;
+            font-family: 'Cormorant Garamond', serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #text {
+            font-size: clamp(32px, 6vw, 72px);
+            font-weight: 300;
+            letter-spacing: 0.25em;
+            white-space: nowrap;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background: #111;
+            vertical-align: middle;
+            margin-left: 4px;
+            animation: blink 0.75s step-end infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="text"></div>
+
+    <script>
+        const text = "TextRoad";
+        const el = document.getElementById('text');
+
+        const cursor = document.createElement('span');
+        cursor.className = 'cursor';
+        el.appendChild(cursor);
+
+        let i = 0;
+
+        function type() {
+            if (i >= text.length) {
+                setTimeout(() => {
+                    cursor.style.animation = 'none';
+
+                    // 1秒後にリセットして繰り返す
+                    setTimeout(() => {
+                        el.innerHTML = '';
+                        el.appendChild(cursor);
+                        cursor.style.animation = '';
+                        i = 0;
+                        type();
+                    }, 1000);
+
+                }, 400); // タイピング完了からカーソルが止まるまでの時間
+                return;
+            }
+            const span = document.createElement('span');
+            span.textContent = text[i];
+            el.insertBefore(span, cursor);
+            i++;
+            setTimeout(type, 120 + Math.random() * 60);
+        }
+
+        setTimeout(type, 600);
+    </script>
+
+</body>
+
+</html>
