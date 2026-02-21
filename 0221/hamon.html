@@ -1,0 +1,241 @@
+<!-- これは波紋のアニメーションです -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&display=swap');
+
+    *,
+    *::before,
+    *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --ink: #0a0a0a;
+        --paper: #f5f4f0;
+        --mid: #888;
+    }
+
+    body {
+        background: var(--paper);
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-family: 'Shippori Mincho', serif;
+        cursor: none;
+    }
+
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .ui {
+        position: fixed;
+        bottom: 2.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .label {
+        font-size: 0.75rem;
+        letter-spacing: 0.35em;
+        color: var(--mid);
+        text-transform: uppercase;
+    }
+
+    .cursor {
+        position: fixed;
+        width: 8px;
+        height: 8px;
+        background: var(--ink);
+        border-radius: 50%;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        z-index: 100;
+        transition: transform 0.1s ease, background 0.2s ease;
+    }
+
+    .cursor.pressing {
+        transform: translate(-50%, -50%) scale(1.8);
+        background: var(--mid);
+    }
+
+    .title {
+        position: fixed;
+        top: 2.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1rem;
+        letter-spacing: 0.6em;
+        color: var(--ink);
+        z-index: 10;
+        pointer-events: none;
+        opacity: 0.35;
+    }
+</style>
+
+<body>
+    <canvas id="c"></canvas>
+    <div class="cursor" id="cursor"></div>
+    <div class="title">波　紋</div>
+    <div class="ui">
+        <div class="label">クリックまたはドラッグ</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+
+        let W, H;
+        let ripples = [];
+        let mouseX = 0, mouseY = 0;
+        let pressing = false;
+        let dragInterval = null;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        class Ripple {
+            constructor(x, y, strength = 1) {
+                this.x = x;
+                this.y = y;
+                this.r = 0;
+                this.maxR = Math.max(W, H) * 0.65;
+                this.speed = 2.2 + Math.random() * 1.2;
+                this.life = 1;
+                this.decay = 0.0012 + Math.random() * 0.0008;
+                this.strength = strength;
+                this.rings = Math.floor(2 + Math.random() * 3);
+                this.phase = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.r += this.speed * (1 + this.r / this.maxR * 0.4);
+                this.life -= this.decay;
+                return this.life > 0 && this.r < this.maxR * 1.2;
+            }
+
+            draw(ctx) {
+                const alpha = this.life * this.strength;
+
+                for (let i = 0; i < this.rings; i++) {
+                    const offset = i * 18;
+                    const r = this.r - offset;
+                    if (r < 0) continue;
+
+                    const ringAlpha = alpha * (1 - i * 0.28) * Math.max(0, 1 - r / this.maxR);
+                    if (ringAlpha <= 0.002) continue;
+
+                    const lineWidth = (1.5 - i * 0.35) * (1 - r / this.maxR * 0.7);
+                    if (lineWidth <= 0) continue;
+
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(10,10,10,${ringAlpha.toFixed(3)})`;
+                    ctx.lineWidth = lineWidth;
+                    ctx.stroke();
+                }
+
+                // subtle inner fill shimmer
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+                const shimmer = alpha * 0.04 * Math.max(0, 1 - this.r / (this.maxR * 0.5));
+                grad.addColorStop(0, `rgba(10,10,10,${shimmer.toFixed(4)})`);
+                grad.addColorStop(1, 'rgba(10,10,10,0)');
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+        }
+
+        function spawnRipple(x, y, strength) {
+            if (ripples.length > 80) ripples.shift();
+            ripples.push(new Ripple(x, y, strength));
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Subtle paper texture via noise-like gradient
+            const bg = ctx.createRadialGradient(W * 0.5, H * 0.4, 0, W * 0.5, H * 0.5, Math.max(W, H) * 0.75);
+            bg.addColorStop(0, '#f8f7f3');
+            bg.addColorStop(1, '#ede9e2');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+
+            ripples = ripples.filter(r => {
+                const alive = r.update();
+                if (alive) r.draw(ctx);
+                return alive;
+            });
+
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        // Idle auto-ripples
+        function autoRipple() {
+            const margin = 100;
+            spawnRipple(
+                margin + Math.random() * (W - margin * 2),
+                margin + Math.random() * (H - margin * 2),
+                0.4 + Math.random() * 0.3
+            );
+        }
+        autoRipple();
+        setInterval(autoRipple, 2800);
+
+        // Mouse interaction
+        window.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        window.addEventListener('mousedown', e => {
+            pressing = true;
+            cursor.classList.add('pressing');
+            spawnRipple(e.clientX, e.clientY, 1);
+            dragInterval = setInterval(() => {
+                if (pressing) spawnRipple(mouseX, mouseY, 0.7);
+            }, 120);
+        });
+
+        window.addEventListener('mouseup', () => {
+            pressing = false;
+            cursor.classList.remove('pressing');
+            clearInterval(dragInterval);
+        });
+
+        // Touch support
+        window.addEventListener('touchstart', e => {
+            e.preventDefault();
+            for (const t of e.changedTouches) spawnRipple(t.clientX, t.clientY, 1);
+        }, { passive: false });
+
+        window.addEventListener('touchmove', e => {
+            e.preventDefault();
+            for (const t of e.changedTouches) {
+                if (Math.random() < 0.4) spawnRipple(t.clientX, t.clientY, 0.7);
+            }
+        }, { passive: false });
+    </script>
+</body>
