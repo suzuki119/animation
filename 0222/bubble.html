@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Animation</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Bubbles */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.4);
+            animation: rise var(--dur, 8s) ease-in infinite var(--delay, 0s);
+            z-index: 8;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateY(-80vh) translateX(var(--drift, 20px));
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scene">
+
+        <!-- Bubbles container -->
+        <div id="bubbles"></div>
+
+    </div>
+
+    <script>
+        const bubblesEl = document.getElementById('bubbles');
+        for (let i = 0; i < 24; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            const size = Math.random() * 20 + 4;
+            b.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      left: ${Math.random() * 100}%;
+      bottom: ${Math.random() * 40}%;
+      --dur: ${6 + Math.random() * 10}s;
+      --delay: -${Math.random() * 15}s;
+      --drift: ${(Math.random() - 0.5) * 60}px;
+    `;
+            bubblesEl.appendChild(b);
+        }
+    </script>
+</body>
+
+</html>
