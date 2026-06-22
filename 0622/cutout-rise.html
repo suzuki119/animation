@@ -1,0 +1,97 @@
+<!-- バージョン2：色が下から液体のようにせり上がって埋まる。文字部分はずっと透ける -->
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cutout - Rise</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: linear-gradient(120deg, #ff5f6d, #ffc371, #47cf73, #4facfe, #a06bff, #ff5f6d);
+            background-size: 300% 300%;
+            animation: bgShift 12s ease infinite;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+        @keyframes bgShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .stage { position: relative; width: 600px; height: 360px; }
+
+        .card { width: 100%; height: 100%; display: block;
+            filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.35)); }
+
+        /* 下からせり上がる液面 */
+        .fill {
+            transform: translateY(360px);
+            animation: rise 2.2s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+        }
+        @keyframes rise {
+            0%   { transform: translateY(360px); }
+            100% { transform: translateY(0); }
+        }
+        /* 液面の波がゆらゆら */
+        .wave { animation: waveMove 3s ease-in-out 0.3s infinite; }
+        @keyframes waveMove {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-40px); }
+        }
+
+        .hint { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center;
+            color: rgba(255,255,255,0.85); font-size: 14px; letter-spacing: 0.08em;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3); user-select: none; }
+    </style>
+</head>
+
+<body>
+    <div class="stage">
+        <svg class="card" viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <mask id="textHole">
+                    <rect x="0" y="0" width="600" height="360" rx="24" fill="white" />
+                    <text x="300" y="200" text-anchor="middle" font-size="150" font-weight="800"
+                          font-family="'Helvetica Neue', Arial, sans-serif" fill="black">RISE</text>
+                </mask>
+                <clipPath id="round"><rect x="0" y="0" width="600" height="360" rx="24" /></clipPath>
+                <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#7ee8fa" />
+                    <stop offset="100%" stop-color="#80a4ff" />
+                </linearGradient>
+            </defs>
+
+            <g mask="url(#textHole)" clip-path="url(#round)">
+                <!-- 枠の薄い下地 -->
+                <rect x="0" y="0" width="600" height="360" fill="#ffffff" opacity="0.12" />
+                <g class="fill">
+                    <g class="wave">
+                        <!-- 波打つ液面（横長にして揺らす） -->
+                        <path d="M-80 30 Q40 0 160 30 T400 30 T640 30 T880 30 V360 H-80 Z"
+                              fill="url(#liquid)" />
+                    </g>
+                </g>
+            </g>
+        </svg>
+        <p class="hint">クリックでもう一度</p>
+    </div>
+
+    <script>
+        const stage = document.querySelector('.stage');
+        const targets = stage.querySelectorAll('.fill, .wave');
+        stage.addEventListener('click', () => {
+            targets.forEach(t => { t.style.animation = 'none'; });
+            void stage.getBoundingClientRect();
+            targets.forEach(t => { t.style.animation = ''; });
+        });
+    </script>
+</body>
+</html>
