@@ -1,4 +1,4 @@
-<!-- 上から落ちてくる色付きカードに、文字の形だけ穴が空いて背景が透けるアニメーション -->
+<!-- 文字の透ける窓は固定。その裏を穴のない色付きカードが落ちてきて、文字部分だけずっと透ける -->
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -21,7 +21,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            /* カードの穴から透けて見える背景（動く虹色グラデーション） */
+            /* 文字の窓から透けて見える背景（動く虹色グラデーション） */
             background: linear-gradient(120deg, #ff5f6d, #ffc371, #47cf73, #4facfe, #a06bff, #ff5f6d);
             background-size: 300% 300%;
             animation: bgShift 12s ease infinite;
@@ -43,39 +43,28 @@
             justify-content: center;
         }
 
-        /* 落ちてくる色付きカード（文字部分がくり抜かれている） */
+        /* カードの枠（マスクは常に固定。文字部分がくり抜かれている） */
         .card {
             width: 100%;
             height: 100%;
             display: block;
-            border-radius: 24px;
             filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.35));
-            /* 上から落下 → 軽くバウンド */
-            transform-origin: center bottom;
-            animation: drop 1.6s cubic-bezier(0.18, 0.9, 0.25, 1) 0.4s both;
+        }
+
+        /* 落ちてくる「穴のない」色付きの面。マスクは動かず、これだけが落下する */
+        .fill {
+            transform: translateY(-360px);
+            animation: drop 1.7s cubic-bezier(0.18, 0.9, 0.25, 1) 0.4s both;
         }
 
         @keyframes drop {
-            0% {
-                transform: translateY(-130%) scale(1);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            60% {
-                transform: translateY(0) scaleY(1);
-            }
-            /* 着地のつぶれ */
-            72% {
-                transform: translateY(0) scaleY(0.9) scaleX(1.04);
-            }
-            85% {
-                transform: translateY(0) scaleY(1.03) scaleX(0.99);
-            }
-            100% {
-                transform: translateY(0) scale(1);
-            }
+            0%   { transform: translateY(-360px); }
+            60%  { transform: translateY(0); }
+            /* 着地後に軽くバウンド */
+            74%  { transform: translateY(-22px); }
+            88%  { transform: translateY(0); }
+            94%  { transform: translateY(-7px); }
+            100% { transform: translateY(0); }
         }
 
         .hint {
@@ -93,10 +82,10 @@
 <body>
 
     <div class="stage">
-        <!-- SVG カード本体。mask の黒い文字部分が「穴」になり背景が透ける -->
+        <!-- viewBox は固定。mask(文字の窓) も固定で、.fill だけが落下する -->
         <svg class="card" viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <!-- luminance マスク：白=カードが見える / 黒=くり抜き（透明） -->
+                <!-- luminance マスク：白=カードが見える / 黒=文字の窓（透明・背景が透ける） -->
                 <mask id="textHole">
                     <rect x="0" y="0" width="600" height="360" rx="24" fill="white" />
                     <text x="300" y="200" text-anchor="middle"
@@ -111,8 +100,11 @@
                 </linearGradient>
             </defs>
 
-            <rect x="0" y="0" width="600" height="360" rx="24"
-                  fill="url(#cardColor)" mask="url(#textHole)" />
+            <!-- マスクは g(固定) に掛ける。中の .fill が落下しても窓は動かない -->
+            <g mask="url(#textHole)">
+                <rect class="fill" x="0" y="0" width="600" height="360" rx="24"
+                      fill="url(#cardColor)" />
+            </g>
         </svg>
 
         <p class="hint">クリックでもう一度</p>
@@ -120,12 +112,11 @@
 
     <script>
         // クリックで落下アニメーションを再生
-        const card = document.querySelector('.card');
+        const fill = document.querySelector('.fill');
         document.querySelector('.stage').addEventListener('click', () => {
-            card.style.animation = 'none';
-            // リフロー強制で再生し直す
-            void card.offsetWidth;
-            card.style.animation = '';
+            fill.style.animation = 'none';
+            void fill.getBoundingClientRect(); // リフロー強制
+            fill.style.animation = '';
         });
     </script>
 </body>
