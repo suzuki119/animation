@@ -1,0 +1,124 @@
+<!-- 3D版：React Three Fiber + drei。文字の窓は固定、色付き3Dカードが落ちて文字だけ背景が透ける（ステンシルくり抜き） -->
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cutout 3D (drei)</title>
+    <style>
+        html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+        #root { width: 100vw; height: 100vh; }
+    </style>
+
+    <!-- ビルド不要：CDN から ESM を読み込む -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "three": "https://esm.sh/three@0.160.0",
+        "htm": "https://esm.sh/htm@3.1.1",
+        "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.17.10?external=react,react-dom,three",
+        "@react-three/drei": "https://esm.sh/@react-three/drei@9.114.0?external=react,react-dom,three,@react-three/fiber"
+      }
+    }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import React, { useRef, useMemo } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Canvas, useFrame } from '@react-three/fiber';
+        import { Text, RoundedBox, useMask } from '@react-three/drei';
+        import htm from 'htm';
+
+        const html = htm.bind(React.createElement);
+
+        // 着地バウンド用イージング
+        const bounce = (x) => {
+            const n = 7.5625, d = 2.75;
+            if (x < 1 / d) return n * x * x;
+            if (x < 2 / d) { x -= 1.5 / d; return n * x * x + 0.75; }
+            if (x < 2.5 / d) { x -= 2.25 / d; return n * x * x + 0.9375; }
+            x -= 2.625 / d; return n * x * x + 0.984375;
+        };
+
+        // 透けて見える虹色グラデーション背景（CanvasTexture）
+        function Background() {
+            const tex = useMemo(() => {
+                const c = document.createElement('canvas');
+                c.width = c.height = 512;
+                const g = c.getContext('2d').createLinearGradient(0, 0, 512, 512);
+                ['#ff5f6d', '#ffc371', '#47cf73', '#4facfe', '#a06bff'].forEach(
+                    (col, i, a) => g.addColorStop(i / (a.length - 1), col));
+                const ctx = c.getContext('2d');
+                ctx.fillStyle = g; ctx.fillRect(0, 0, 512, 512);
+                return new THREE.CanvasTexture(c);
+            }, []);
+            // ゆっくり色が流れる
+            useFrame((s) => { tex.offset.x = s.clock.elapsedTime * 0.03; });
+            tex.wrapS = THREE.RepeatWrapping;
+            return html`<mesh position=${[0, 0, -1]} renderOrder=${0}>
+                <planeGeometry args=${[40, 24]} />
+                <meshBasicMaterial map=${tex} />
+            </mesh>`;
+        }
+
+        // 文字＝ステンシルに書き込む「窓」（位置は固定）
+        function TextMask() {
+            const writer = {
+                stencilWrite: true, stencilRef: 1,
+                stencilFunc: THREE.AlwaysStencilFunc,
+                stencilZPass: THREE.ReplaceStencilOp,
+                colorWrite: false, depthWrite: false,
+            };
+            return html`<${Text} position=${[0, 0, 0.3]} renderOrder=${1}
+                fontSize=${1.35} fontWeight="bold" letterSpacing=${-0.02}
+                anchorX="center" anchorY="middle">
+                HELLO
+                <meshBasicMaterial ...${writer} />
+            </${Text}>`;
+        }
+
+        // 落ちてくる色付き3Dカード。文字の窓部分（stencil==1）以外だけ描画される
+        function Card() {
+            const ref = useRef();
+            const stencil = useMask(1, true); // invert: 文字以外に描画
+            const startY = 7, fall = 1.5, cycle = 3.4;
+            useFrame((s) => {
+                const t = s.clock.elapsedTime % cycle;
+                const p = Math.min(t / fall, 1);
+                ref.current.position.y = startY * (1 - bounce(p));
+                ref.current.rotation.y = Math.sin(s.clock.elapsedTime * 0.6) * 0.12;
+            });
+            return html`<group ref=${ref}>
+                <${RoundedBox} args=${[5, 3, 0.4]} radius=${0.22} smoothness=${4} renderOrder=${2}>
+                    <meshStandardMaterial color="#6c5ce7" roughness=${0.35} metalness=${0.1} ...${stencil} />
+                </${RoundedBox}>
+            </group>`;
+        }
+
+        function Scene() {
+            return html`<${React.Fragment}>
+                <ambientLight intensity=${0.8} />
+                <directionalLight position=${[3, 5, 4]} intensity=${1.2} />
+                <${Background} />
+                <${TextMask} />
+                <${Card} />
+            </${React.Fragment}>`;
+        }
+
+        createRoot(document.getElementById('root')).render(
+            html`<${Canvas} gl=${{ stencil: true, antialias: true }}
+                    camera=${{ position: [0, 0, 6], fov: 50 }}>
+                <${Scene} />
+            </${Canvas}>`
+        );
+    </script>
+</body>
+</html>
